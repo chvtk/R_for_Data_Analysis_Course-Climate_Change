@@ -1,0 +1,127 @@
+---
+title: "Dataset 1 - Temperature over Time"
+output:
+  html_document:
+    fig_height: 2
+    fig_width: 5
+  word_document:
+    fig_height: 2
+    fig_width: 5
+---
+
+### 1. Introduction
+Our first dataset for the course comes from NASA and contains 
+
+### 2. Preparing the dataset
+
+Loading in the required libraries :
+```{r message = FALSE, warning = FALSE}
+library(ggplot2) #graphics package
+library(tidyr) #data tidying package 
+library(dplyr) #data manipulation package
+library(lubridate) 
+```
+
+Reading in the file into Rstudio. Here, we are reading in a url, which is linked to a google sheets .csv file containing the temperature data. 
+```{r}
+my.url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRe9Enb9NeP_Ky_ZMcEyb0xNjOnqWs3GsAsEMv_LhF2wKOt9-CKcTS6dDtYEfC3u2lKMefRWLTT8Ejc/pub?output=csv"
+
+temps = read.csv(url(my.url))
+```
+
+Let's look at the dataset. Is it a tidy dataset?
+```{r}
+head(temps)
+```
+
+Since we have two variables - month and temperature anomaly in each of the month columns - we will need to split these up to have a "tidy" dataset. To do this, we can use the `gather` function, since we want to gather multiple columns (all the various months' columns) into two columns (a column containing the Month value and a column containing the Temperature anomaly value)
+
+```{r}
+temps2 = gather(temps, key = M, value = Temp_Anomaly, Jan.1:Dec.1) 
+#Creating tidy data - taking columns from Jan.1 to Dec.1 and then putting column names as the key (in a new column M), and the Temperature anomalies for each month into a new Temp_Anomaly column. This is a tidyr function.
+```
+Note: We could recreate our original dataset using the `spread` command - ex. spread(temps2, key = M, value = Temp_Anomaly)
+
+Now we have a tidy dataframe. However, if we plotted the data right now, we would see that it is plotting all of the months on top of each other! 
+```{r}
+#filtering the dataset to one year, to visualize lack of monthly resolution
+test = filter(temps2, Year == 2000)
+#plotting data
+ggplot(data = test, aes(x = Year, y = Temp_Anomaly)) + geom_point() 
+
+```
+
+This is because R doesn't know that these points represent different dates within the year 2000. To do this, we need to convert our dates into a date format: 
+
+```{r}
+#turning the Year and Month columns into a column that represents a specific date.
+temps3 = temps2 %>% mutate(D = paste(Year, M, sep = ".")) %>% mutate(D2 = as_date(D)) 
+
+#Looking at our new columns
+head(temps3) 
+
+#Extracting the month from the new date column and putting it into its own column. This is done to ensure that the month factor is ordered correctly (from January or 01 to December or 12).
+temps4 = temps3 %>% mutate(M = month(D2)) 
+
+#looking at our output
+head(temps4)
+```
+### 3. Visualizing the dataset
+
+Now we can get to plotting! 
+
+#### Your tasks :  
+
+1.  Graph a distribution of the temperatures contained in the dataset. What do you conclude from the distribution? Is there a real-world basis for your observations?
+2.  Graph overall trend in temperature vs. time using the ggplot function. Think about what type of graph would be most appropriate (identify types of variables, etc). Are there other aesthetics to add to the graph to underline a specific trend?
+3.  Graph temperature vs. time, highlighting monthly trends over time (can do this in many ways - try a couple and see which is most effective)
+4.  Using functions in the dplyr package, calculate the yearly mean temperature for each year. Then, plot the yearly mean temperature over time. How does this plot differ from your plot in question 2? Which is most effective and why? 
+5.  Using the trends that you see in your figures, identify a scientific (not statistical) hypothesis that you will test in class on Wednesday. 
+
+You can manipulate this markdown document to complete tasks 1-5. Make sure to :
+
+*  Annotate your code
+*  Clearly demarcate different sections of your report
+*  Answer all questions above + provide any additional rationale necessary
+*  Submit your R markdown document + knit html file on Moodle before Wednesday's class
+
+```{r}
+p = ggplot(temps4, aes(x = D2, y = Temp_Anomaly)) + geom_point() 
+p
+
+p = ggplot(data = temps4, aes(x = D2, y = Temp_Anomaly)) + geom_point() + facet_wrap(~M)
+p
+
+```
+
+
+
+```{r message=FALSE}
+# Create a histogram of temperatures 
+ggplot(data=temps4) + geom_histogram(mapping = aes(Temp_Anomaly))
+```
+
+
+
+```{r message=FALSE}
+# Create a scatterplot of temperature over time
+ggplot(data=temps4) + geom_point(aes(x = D , y = Temp_Anomaly))
+#We use D here, because it is formatted as a date variable
+```
+
+
+
+In the following code, we layer additional components onto the two graphs shown above.
+
+```{r}
+ggplot(data = temps4) +                       
+      geom_density(mapping = aes(x=Temp_Anomaly, y = (..count..)))  +   
+      labs(title="Temperature Anomaly Values from 1880-2017", 
+          x="Monthly Average Temperature Anomaly")   
+```
+
+**Remarks:**
+
+* `geom_density` overlays a density curve on top of the histogram.
+
+

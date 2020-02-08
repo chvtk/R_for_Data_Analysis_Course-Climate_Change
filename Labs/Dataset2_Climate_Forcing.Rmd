@@ -1,0 +1,64 @@
+---
+title: "Dataset 2 - Climate Forcings"
+output:
+  html_document:
+    theme: cerulean
+    highlight: pygments
+---
+*  **What libraries will you need? Load them in an R chunk below**   
+
+```{r}
+#reading in dataset 
+my.url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSKAIaOWuLBt9Gvd_rr5ZC2G3QNLHInFYtoBhkdpkoZD-WcLTjngTREkfi3n8Gbh2agxBmVr63cvwcN/pub?gid=789653058&single=true&output=csv"
+
+causes = read.csv(url(my.url))
+```
+
+*  **Take a look at the dataset**
+
+#### Brief Background
+This dataset has headings of : `Year`, `Volcanic`, `Solar_Be`, `Solar_Ice_C14`, `Solar_Tree_C14`, `GHG`, `Trop_Aerosols`, `Mann_Temps`, and `CL_Temps`. The column headers `Volcanic`, `Solar_Be`, `Solar_Ice_C14`, `Solar_Tree_C14`, `GHG`, `Trop_Aerosols` each correspond to a variable that contributes to climate forcing, with values of each column representing temperature variations attributed to the specific forcing.  For example,  `Volcanic` represents the temperature variation contributions of sulfur aerosols produced by volcanic erruptions. The `Solar_Be` variable indicates influence of solar irradiation changes, as measured from ^10^Be isotope records from ice cores. `Solar_Ice_C14` also indicates influence of solar irradiation changes, but measured via ^14^C isotope calculations from ice cores and `Solar_Tree_C14` provides yet another measurement of solar irradiation changes, measured from ^14^C isotope calculations from tree ring records. `GHG` represents climate forcings attributed to concentrations of greenhouse gases (CO~2~, CH~4~, N~2~O, CFCs) in the atmosphere. Finally, `Trop_Aerosols` indicates the role of aerosols (small, solid and liquid particles) such as sulfates and soots that enter the troposphere and either reflect or absorb solar radiation. The `Year` column indicates the year attributed to the measurements and the 
+`Mann_Temps`, and `CL_Temps` columns represent two different multi-proxy temperature reconstructions. 
+
+### 1. Describing context of the dataset  (feel free to rename or reorder these headers!)
+
+### 2. Preparing data 
+
+*  **Is this data tidy?**
+*  **May need to prepare data in other ways as you develop your research question**  
+    +  subsetting data, filtering data, etc. 
+
+### 3. Research question and Scientific hypothesis 
+
+*  **You can visualize data first before deciding on a question**
+*  **Can ask a question about the whole dataset or about part of the dataset**
+*  **Think about how you would answer question - can you do it with the information you have?** 
+
+### 4. Visualizing data + Description of trends  
+
+**Suggestions for initial visualizations**
+
+* **Observed temperature change (from reconstruction) vs. time**
+* **Temperature change per source vs time, with temperature change source accounted for**
+* **Observed temperature change (from reconstruction) vs. source temperature change**
+
+* **Think about what the trends in each of these graphs signifies!**
+
+### 5. Statistical hypothesis + Statistical testing
+
+*  **Focus on the research question and hypothesis you developed.** 
+*  **Make sure you think about and explain your rationale for using a certain test**  
+
+### 6. Evaluation of hypotheses
+
+*  **Make sure to include critiqe of your conclusions**
+
+### 7. Connection to Climate Change 
+
+* **Mechanistic explanations can be included** 
+* **Implications** 
+
+### 8. Troubleshooting self assessment
+
+### References
+

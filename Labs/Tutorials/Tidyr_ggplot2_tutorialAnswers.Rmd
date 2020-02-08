@@ -1,0 +1,146 @@
+---
+title: " tidyr and ggplot2 Tutorial Answers"
+author: "Chantal Koechli"
+date: "1/28/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, warning=FALSE, message=FALSE}
+#loading the libraries we'll be using 
+library(tidyr)
+library(dplyr)
+library(ggplot2)
+library(readr)
+```
+
+
+####Answers to the "On your Own" component of the tidyr and ggplot2 tutorials
+
+###tidyr Answers
+
+1. Daily Show dataset is tidy because it fits the criteria for being tidy:  
+*  Each variable has its own column - no sharing of columns.
+*  Each observation (in this case, guest on the show) has its own row
+*  Values of variables are stored in cells, not column headers (ex. the year of the show is shown in a cell, not in a header like "guests_2011")
+*  No units are included in the dataset
+*  No extraneous information is included in the dataset
+
+2. The under5mortality dataset is not tidy because the year columns contain values that detail mortality rate. Thus, two variables (year and mortality) are contained within one column and the variable Year is stored in a column header, not a cell. To change the dataset into a tidy dataset, you would need to create a separate year column, containing all the year values, and a mortality rate column, containing the mortality rate values. For instance: 
+```{r, warning=FALSE, message=FALSE}
+#reading in file
+under5 = read.csv("Desktop/under5mortality.csv")
+head(under5) # I always check out the dataset to see what column names are, etc
+
+#Creating a tidy dataset, by creating separate year and mortality rate columns 
+under5_tidy = gather(under5, year, mortality, X1800:X2015)
+#Looking at output
+head(under5_tidy)
+
+#The dataset read in with Xs attached to the year - this may signifiy that a space character is present before each year. We can use extract_numeric to extract only the number values.
+under5_tidy$year = extract_numeric(under5_tidy$year)
+#Looking at output
+head(under5_tidy)
+```
+3. mlb2016 is not a tidy dataset because the date column contains both beginning and ending years of the salary contract, as well as the duration of the contract. Also, units (dollar signs) are found in the `Salary`, `Total.Value`, and `Avg. Annual` columns. To change this into a tidy dataset, the `Years` column would need to be split into three columns : Begin, End, and Duration and the dollar signs would need to be removed :
+
+```{r, warning=FALSE, message= FALSE}
+#reading in dataset
+mlb = read.csv("Desktop/mlb2016.csv")
+#taking a look at the dataset 
+head(mlb)
+
+#Separating Years column
+mlb_tidy = separate(mlb, Years, c("Duration", "Beginning", "End"))
+#looking at dataset 
+head(mlb_tidy)
+#hmmm...let's say we want the ending year to be expressed as 2020 instead of 20. Let's use the useful `paste` function: 
+mlb_tidy$End = paste(20, mlb_tidy$End, sep = "")
+
+#Removing dollar signs
+mlb_tidy$Salary = parse_number(mlb_tidy$Salary)
+mlb_tidy$Total.Value = extract_numeric(mlb_tidy$Total.Value)
+mlb_tidy$Avg.Annual = extract_numeric(mlb_tidy$Avg.Annual)
+#Looking at results
+head(mlb_tidy)
+
+```
+4. USBprices2 is not tidy because each row contains three observations of data (from  2009 and 2003 AND across different food types). Additionally, each column contains the variable of date in addition to the food type. To tidy up this data, we need to create a column designating type of food, a column designating year, and a column designating price of each food item for each specific year. However, we will need to do this stepwise, first using gather to create a column with food type and year and a column with price. Then, we can separate the food type - year column into separate columns : 
+
+```{r}
+#reading in dataset
+ubs2 = read.csv("Desktop/UBSprices2.csv")
+#looking at dataset
+head(ubs2)
+
+#gathering data to create
+ubs2_tidy = gather(ubs2, FoodYear, Price, bigmac2009:rice2003)
+#looking at output
+head(ubs2_tidy)
+
+#Separating Food type and year. Note that the sep = -5 parameter indicates that the separation between the FoodYear variable should occur between the fourth and fifth character from the right. 
+ubs2_tidy = separate(ubs2_tidy, FoodYear, c("Food", "Year"), sep = -5)
+#Looking at output
+head(ubs2_tidy)
+
+```
+
+###ggplot2 Tutorial Answers
+
+*  **Restrict the AmesHousing data to only sales under normal conditions. In other words, Condition.1 == Norm**
+
+```{r}
+#reading in dataset
+AmesHousing = read.csv("Desktop/AmesHousing.csv")
+#looking at dataset
+head(AmesHousing)
+
+#filtering to Condition.1 == Norm
+AmesHousing_filt = filter(AmesHousing, Condition.1 == "Norm")
+#looking at output
+head(AmesHousing_filt$Condition.1) 
+```
+*  **Create a new variable called TotalSqFt = GR.Liv.Area  +  Total.Bsmt.SF and remove any homes with more than 3000 total square feet.**
+
+```{r}
+#Using %>% to chain together the two commands - mutate and filter
+AH_filt_totsqft = mutate(AmesHousing_filt, TotalSqFt = Gr.Liv.Area + Total.Bsmt.SF) %>% filter(TotalSqFt <= 3000)
+
+#looking at output
+head(AH_filt_totsqft)
+max(AH_filt_totsqft$TotalSqFt) #shows the maximum value of variable TotalSqFt
+```
+
+*  **Create a new variable, where No indicates no fireplaces in the home and Yes indicates at least one fireplace in the home.**
+
+ This is a bit trickier than the activities you completed in the dplyr tutorial. You will be doing conditional mutating here - that is, the value of a new variable is dependent on the condition (value) of an existing variable. 
+ 
+To do this, the if_else function is used. The if_else function has 3 required parameters : condition, true, and false.  
+
+*  Condition - the conditional statement used for evaluation. For the code below, I've chosen to evaluate the statement that Fireplaces == 0 (a house has 0 fireplaces)  
+*  True - what to put into the new column if the condition is true (in this case, "No")
+*  False - what to put into the new column if the condition is false (in this case, "Yes")
+```{r}
+AH_filt_totsqft = mutate(AH_filt_totsqft, FP = if_else(Fireplaces == 0, "No", "Yes")) 
+```
+
+Note that this conditional mutating could be done in other ways (ex. evaluating the statement that Fireplaces > 0, etc.)
+
+
+*  **With this modified data file, create a graphic involving no more than three explanatory variables that best portrays how to predict sales price. For example, Figure 12 uses a linear model of kitchen quality, above ground square footage, and number of fireplaces to predict sale price.**
+
+There are many possible answers for this (depending on the three variables you use). Here's an example :
+```{r}
+ggplot(AH_filt_totsqft, aes(x = TotalSqFt , y = SalePrice)) + 
+  geom_point(aes(color = as.factor(Overall.Qual)), alpha = 0.4) +
+  geom_smooth(method=lm, se=FALSE, fullrange=TRUE) + 
+  facet_wrap(~FP) + 
+  labs(title = "Sale Price vs. Total Square Feet, faceted by Fireplace Presence", y="Sale Price", x = "Total living area (sq.ft.)", color = "Overall House \n Quality") + 
+  scale_color_discrete(labels = c("Very Poor", "Poor", "Fair", "Below Average", "Average", "Above  Average", "Good", "Very Good", "Excellent"))
+    
+```
+
+This plot is showing us that sale price increases with total living area and seems to also increase with overall house quality. The relationship between total living area and sale price does not seem to differ between houses with or without fireplaces, but we do notice that there seem to be a higher number of "below average", "fair", and "poor" houses in the set of houses that contain no fireplaces. However, to more firmly establish that relationship, we'd need to explore the data in different ways. 

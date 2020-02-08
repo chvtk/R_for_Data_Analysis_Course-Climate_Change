@@ -1,0 +1,191 @@
+---
+title: "Dataset 7 - Phenology"
+output:
+  html_document:
+    theme: cerulean
+    highlight: pygments
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE)
+options(tibble.width = Inf) 
+```
+
+Libraries we will use (you may need to add more) : 
+```{r}
+library(ggplot2)
+library(tidyr)
+library(dplyr)
+library(broom)
+```
+
+
+
+###Background 
+One clear biological indicator of climate change is phenology, or the timing of key life events in plants and animals.  Phenological events are diverse and include time of flowering, mating, hibernation, and migration among many others.  Generally, phenological events are strongly driven by temperature, with warmer temperatures typically resulting in earlier occurrence of springtime migration, insect emergence from dormancy, and reproductive events.  Shifts in phenology in the direction predicted by climate change have been observed worldwide, suggesting that climate change is already having profound, geographically broad impacts on ecology (Parmesan & Yohe 2003, Menzel et al. 2006; Rosenzweig et al. 2008).   
+
+This exercise is designed to allow you to use real ecological data to evaluate long-term temperature change and its impacts on flowering phenology, pollinator emergence and arrival phenology, and emergent trophic mismatches.  You will use several data sets for this activity; long-term temperature records from the U.S. Historical Climatology Network (USHCN, Menne et al. 2010), flowering phenology data from Calinger et al.'s study across Ohio (2013), and pollinator arrival and emergence time data from Ledneva et al. (2004). 
+
+####Temperature Data
+The USHCN has been collecting temperature data at 26 weather stations in Ohio from 1895 to the present (Menne et al. 2010).  These data are particularly useful for climate change studies as the weather stations have remained in the same location for the entirety of the collection period and are situated away from urban areas. 
+
+*  **Based on previous knowledge from the course, does the information about weather stations increase or decrease your trust in the data? Why/why not?**
+
+The temperature data read in below are the monthly spring (February-May) temperatures for all USHCN weather stations across the US from 1895 - 2013. 
+
+```{r}
+#Reading in temperature data 
+
+temps <-  read.csv("/Users/koechlic/Desktop/Courses/ClimateChange_Sp2018/Datasets/OH_Temps.csv")
+
+#Looking at dataset 
+head(temps)
+```
+
+To prepare the data, you need to calculate spring temperature averages by determining the mean spring temperature for each of Ohio's  ten National Oceanic and Atmospheric Administration (NOAA) climate divisions. Using these data, you can evaluate both regional, division-based temperature trends from 1895-2009 and large-scale temperature trends across the entire state.  
+
+
+Steps in preparing data  
+
+1.  Look at the dataset (`head` command). Do you know what each column represents?  
+2.  Filter the dataset for rows reporting values for stations in Ohio.    
+3.  Look at the dataset. Is it tidy? If you are tidying, `gather` is the function you'll want to use.   
+4.  Check out the structure of the dataset using the `str` function. What do you notice about the variable classification of temperature values? The `as.numeric` function may come in helpful here (ask if you'd like more information!)  
+5.  Add a row for average yearly mean spring temperatures for each climate division. You will want to use the `group_by` function, along with either `summarise` or `mutate`. If using `summarise` you may need to think about what variables you'd like to retain in the final dataset. You will also notice that temperatures are reported as whole integers even though they are measured to the hundreths of a degree Celsius. Therefore values need to be divided by 100 to get the traditional representation of degree Celsius. 
+
+*  **Create a graph showing mean spring temperature change over time for the entire state of Ohio**  
+    + How would you quantify this temperature change over time?    
+
+*  **Create a graph showing mean spring temperature change over time for each climate region in the state**
+
+**Why are we making these graphs? Why would these graphs be useful in phenological research study?**
+
+####Phenological Data
+To determine phenological responsiveness of flowering phenology, we used temperature data from the USHCN and herbarium specimens collected throughout OH from 1895-2009 (Calinger et al. 2013).  Only those herbarium specimens with at least 50% of their flower buds in anthesis (opening of buds) were included in the study to assess shifts in maximum flowering date.  Each individual specimen was paired with a temperature specific to its collection year and location as well as the species’ season of flowering.  You are given data from six example species from a total data set of 141 species.    
+
+Flowering time is a crucial phenological event for plants as it can strongly impact reproductive success (Calinger et al. 2013).  Previous research has shown significant advancement of flowering with temperature increase (called phenological responsiveness, days flowering shifted/$^\circ$C), although species vary in the degree to which they shift flowering with temperature change.  Since flowering time can have substantial fitness effects, climate change may alter species' performance as climate warms, causing some species to decrease in abundance. 
+
+```{r}
+#Loading dataset
+my.url <-  "https://docs.google.com/spreadsheets/d/e/2PACX-1vTeL9L8CWSjkJaPAmvWhFc_OPecgwDOumq3PRDBqwChJSLo5_4ZPL3SzdTvhhTMNK43Bi7x6kNGApdd/pub?gid=0&single=true&output=csv"
+
+phenology <-  read.csv(url(my.url))
+
+head(phenology)
+```
+
+The data contains the column headings: `Species`, `Common Name`, `County`, `Year`, `Division`, `Temperature`, `DOY`, `Growth.Form`, `Season`, `Origin`, `Pollination.Syndrome`.  `Species` and `Common Name` specify the plant species of interest.  Each row represents an individual observation for a given species. `County` and `Division` provide information on the county of observation and the NOAA Climate Division in which that county is found.  `Year` simply indicates the year in which the observation was made. 
+
+Flowering dates are given in the `DOY` column.  DOY stands for “day of year” and is the numeric day of year (day 1=Jan.1, Dec. 31=365, and so on) that the plant was flowering.  Each flowering date is paired with a temperature specific to the individual plant’s location, year, and season of observation.  This temperature ($^\circ$C) is given in the `Temperature` column.
+
+`Growth.Form` classifies plants by growth characteristics. `Season` indicates season of flowering, with "Spring"" representing April - May, "Early" representing early summer (June - July), and "Late" representing late summer (August or later). `Origin` indicates whether the plant is native or non-native to North America. `Pollination.Syndrome` represents classification of pollination method for each species. All species represented in this dataset are pollinated by insects and are classified as "Facultative" outcrossers, meaning that the plant species can self-pollinate or "Obligate" outcrossers, meaning that the plant species cannot self-pollinate.
+
+More information about these variables and how they were measured can be found in the methods section of Calinger et. al. ("Herbarium species..." article on Moodle page).
+
+###Analysis
+
+Given these data, how could you assess phenological responsiveness, or change of flowering dates per degrees celsius (days/$^\circ$C) for each species? Consider the following questions in your answer: 
+
+*  What are your independent and dependent variables? What type of data are they (continuous, categorical, etc.) 
+*  What type of graph would be appropriate for your data?    
+*  How might you qualify (visually show) and quantify (get a specific representative number for) your phenological responsiveness value for each species? 
+
+**Create a graph showing the relationship between flowering date (DOY) and temperature for each of the six species.  Use these graphs and the appropriate quantification (see useful code section below) to determine phenological responsiveness values for each species.**
+
+####Useful code!
+
+We'll use the package `dplyr` and `broom` (already downloaded on classroom computers), to easily perform linear regression on multiple groups of a variable. Here is some example code you can reference :
+
+```{r}
+phenology_model = phenology %>% group_by(Species) %>% #grouping by species 
+  do(linfit = lm(DOY ~ Temperature, data = .)) #do() allows you to apply the lm() function to each species group
+
+phen_coef = tidy(phenology_model, linfit) # using broom to put coefficient values and associated p-values by species in a tidy data_frame
+phen_coef
+
+phen_summ = glance(phenology_model, linfit) # using broom to place other summary information (R^2 values, df, etc into a tiy dataframe)
+
+phen_summ
+```
+
+
+####Discussion Questions (to verbally discuss with partner/group)
+
+*  Do all species exhibit identical shifts in flowering time with an increase in temperature, or do some species advance/delay flowering more than others as temperature increases?  Use specific species as examples in your answer. What impacts might this have on Ohio species diversity (we will consider species richness, or the total number of species in a given area, as our measure of species diversity)? 
+
+*  Based on the average shift in flowering (days/$^\circ$C) over all species, is flowering time in Ohio changing with warming temperatures?  On average, how much would flowering shift with a 1$^\circ$C or 2$^\circ$C temperature increase?
+
+*  Create a graph of temperature vs. flowering date that does not take species into account. What conclusions would you draw from this graph? 
+
+###Extension
+
+Along with shifts in the timing of plant phenological events, scientists have observed significant shifts in the timing of animal phenological events such as migration, insect emergence, and mating associated with temperature increase (Cotton 2003).  Like flowering time in plants, the timing of these phenological events has direct impacts on reproductive success in animals.  
+
+Changes in the timing of phenological events in plants and animals may disrupt important plant-animal interactions such as pollination.  These disruptions of interactions as a result of shifting phenology are called trophic mismatches.  For example, in pollination mutualisms, the pollinator benefits from pollen and nectar food resources and the plant benefits by being pollinated and increasing its reproductive success.  Under average climate conditions, without climate change associated warming, flowering time in the plant and arrival time of the pollinator (based on migration or insect emergence date) are cued to coincide.  However, if the plant or pollinator responds more strongly to climate warming and shifts their phenology more than their mutualistic partner, this relationship will be disrupted. 
+
+This trophic mismatch results in decreased pollination and reproduction for the plant and a loss of important floral food resources for the pollinator.
+
+Using data provided below, assess the effects of warming on shifts in arrival time of the migratory Ruby-throated Hummingbird, Archilochus colubris and emergence from overwintering of the Spring Azure butterfly, Celastrina ladon (data from Ledneva et al. 2004).   Both of these species occur in Ohio although this data was collected in Massachusetts.  For this study, we will assume that the responses of both the Ruby-throated Hummingbird and the Spring Azure butterfly are uniform throughout their ranges. You will also discuss whether we have evidence for trophic mismatches based on your findings.  
+
+
+Species	 Arrival Time Change  |  (days/$^\circ$C)
+----------------------------  |  ----------------
+Celastrina ladon (adults)	    |  0.55
+Archilochus colubris	        |  -1.40  
+
+
+*  Based on the data given above for arrival time change, describe the pattern of shifting arrival/emergence time phenology for each pollinator species. 
+
+*  Archilochus colubris uses *Aquilegia canadensis* (columbine) flowers as a nectar food resource, and, in turn, is an important pollinator of this plant (Bertin 1982).  *Celastrina ladon* caterpillars feed on Cornus florida (flowering dogwood) flowers (University of Florida IFAS Extension), although this interaction is not mutualistic as the dogwood receives no benefit.  Given your knowledge of flowering shifts with temperature in *A. canadensis* and *C. florida* as well as arrival time shifts with temperature in *A. colubris* and *C. ladon*, speculate on what effects climate warming might have on survival and reproduction in these species. 
+
+    +  How would species interactions change with a 1$^\circ$C temperature increase? 
+    +  With a 3$^\circ$C temperature increase?
+    
+###On Your Own
+
+ Come up with one extension of the analysis.  
+
+*When working with your extension question, feel free to include any of the data from your analysis above but make sure to either create a new Rmarkdown document reformat your existing Rmarkdown document into a professional report.*
+
+For example, you may ask...
+
+*  Does the relationship between temperature and flowering time differ significantly between species?
+*  Does the climate division in which a species exists impact its phenological response?
+*  Does latitude impact phenological response?
+*  Does a specific plant characteristic (growth form, origin, pollination type, etc.) impact phenological response? 
+
+####Report thoughts
+*  In your discussion section you may want to discuss some mechanistic support for your findings. Let's say you found that there are significant differences between species' responses - are there proposed mechanisms in the literature for those differences? 
+
+*  You can also reflect on ecological consequences of your findings. Again, make sure that these are based in literature findings (do not necessarily need to relate to your specific study). 
+
+####Attribution
+This dataset and some of the activity is adapted from Kellen M. Callinger, Department of Evolution, Ecology, and Organismal Biology, The Ohio State University
+
+### Literature Cited
+
+Bertin RI. 1982. The ruby-throated hummingbird and its major food plants: ranges, flowering phenology, and migration. Canadian Journal of Zoology 60: 210-219.
+
+Calinger, K., S. Queenborough, and P. Curtis. 2013. Herbarium specimens reveal the footprint of climate change in north-central North America. Ecology Letters 16:1037–1044. 
+
+Cotton, P.A. 2003. Avian migration phenology and global climate change. PNAS 100:12219-12222.
+
+IPCC, 2007: Climate Change 2007: The Physical Science Basis. Contribution of Working Group I to the Fourth Assessment Report of the Intergovernmental Panel on Climate Change [Solomon, S., D. Qin, M. Manning, Z. Chen, M. Marquis, K.B. Averyt, M. Tignor and H. L. Miller (eds.)]. Cambridge University Press, Cambridge, United Kingdom and New York, NY, USA.
+
+Ledneva, A., Miller-Rushing, A.J., Primack, R.B., and Imbres, C. 2004. Climate change as reflected in a naturalist’s diary, Middleborough, Massachusetts. Wilson Bulletin 116:	224-231.
+
+Menne, M. J., Williams Jr., C. N., and Vose, R. S. 2010. United States Historical Climatology Network (USHCN) Version 2 Serial Monthly Dataset. Carbon Dioxide Information Analysis Center, Oak Ridge National Laboratory, Oak Ridge, Tennessee. 
+
+Menzel, A., Sparks, T.H., Estrella, N., Koch, E., Aasa, A., Ahas, R., et al. 2006. European phenological response to climate change matches the warming pattern. Global Change Biology 12:1969–1976.
+
+Parmesan, C. & Yohe, G. 2003. A globally coherent fingerprint of climate change impacts across natural systems. Nature 421:37–42.
+
+Rosenzweig, C., Karoly, D., Vicarelli, M, Neofotis, P., Wu, Q., Casassa, G., et al. 2008. Attributing physical and biological impacts to anthropogenic climate change. Nature 453:353-357. 
+
+United States Environmental Protection Agency.  Heat Island Effect. [http://www.epa.gov/hiri/] Last accessed April 5, 2013.
+
+University of Florida IFAS Extension. Butterfly Gardening in Florida. 	[http://edis.ifas.ufl.edu/uw057] Last accessed January 31, 2014. 
+
+
+
+

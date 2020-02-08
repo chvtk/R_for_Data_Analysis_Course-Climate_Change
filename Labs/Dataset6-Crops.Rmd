@@ -1,0 +1,325 @@
+---
+title: "Climate Change and Crop Yield"
+output:
+  html_document:
+    theme: cerulean
+    highlight: pygments
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+This dataset we will work with this week allows visualization of changes in crop yields under different future climate scenarios. We will be visualizing these changes on maps, using some new packages in R that help us work with maps:  
+
+```{r, warning=FALSE, error=FALSE}
+# load required packages
+library(maptools) # creates maps and works with spatial files
+library(rgdal)    # works with spatial files
+library(broom)    # assists with tidy data
+library(ggplot2)  # graphics package
+library(leaflet)  # interactive graphics
+library(tidyr)    # tidying + manipulation of data
+library(dplyr)    # joining, filtering, selecting data frames
+library(readr)    # quickly reads files into R
+library(RColorBrewer) #contains color palettes 
+```
+
+###Map Making
+
+In most cases, geographic information for maps is stored in a more complex format, commonly referred to as a shapefile. A shapefile consists of several component files. Not all components are needed, but each shapefile must have at least the following three component files:
+
+*  .shp: The main shape file. This file contains all the information needed to draw geographic features such as points, lines, and polygons.
+*  .shx: The shape index file, which organizes the geometries in a way that is easily read by programs.
+*  .dbf: The attribute file. This contains the actual data associated with each geographic feature, such as the population or area of each country.  
+
+Shapefiles allow you to easily draw different polygons (i.e. countries, administrative divisions), lines (i.e. roads, rivers), and points (i.e. fire departments, mountains, battles).
+
+We will use a shapefile of the world’s state boundaries that was downloaded from the Natural Earth website. (http//www.naturalearthdata.com/download/50m/cultural/ne_50m_admin_0_countries.zip)
+
+```{r}
+Worldshapes <- rgdal::readOGR("/Users/koechlic/Desktop/Courses/ClimateChange_Sp2018/Datasets/ne_50m_admin_0_countries") 
+
+#Note : here you are reading in a folder (the "ne_50m_admin_0_countries" folder)
+
+str(Worldshapes, max.level = 2)
+
+```
+
+*  The readShapeSpatial from the maptools package allows us to load all component files simultaneously.
+*  The str command allows us to see that the Worldshapes object is of the class SpatialPolygonsDataFrame. This means that R is representing this shapefile as a special object consisting of 5 slots of geographic data. The first slot, (and the most relevant to us) is the data slot, which contains a data frame representing the actual data adjoined to the geometries. Similar to how we access a column in a data frame with the $ infix, we can also access a slot in a shapefile with the @ infix.
+*  The max.level=2 limits the information that is printed from the str command.
+
+```{r}
+names(Worldshapes@data)
+```
+
+Column names of the worldshapes@data file (data associated with geographic features. Ex. `pop_est` represents the population estimate of the country. `gdp_md_est` represents the estimated median gross domestic product (GDP) - a monetary measure of the market value of all  goods and services produced in a period of time for a specific region.
+
+```{r}
+dim(Worldshapes@data)
+```
+
+The worldshapes@data file containes 241 rows and 63 columns describing aspects of each country. Each row represents a country.
+
+We can use ggplot2 to draw maps using shapefiles. However, ggplot2 on its own cannot read shapefiles directly – the shapefile must first be converted to a data frame. We can convert a spatial object to a data frame with the tidy function from the broom package.
+
+```{r}
+Worldshapes_tidied <- tidy(Worldshapes) #tidy converts dataframes into a tidy dataframe
+
+head(Worldshapes_tidied) #Let's take a  look at the file
+
+```
+More information about broom : https://cran.r-project.org/web/packages/broom/vignettes/broom.html
+
+The `Worldshapes_tidied` variable now contains the latitude, longitude and group information that allows use to create a base map. There are multiple latitude and longitude values for each country, mapping the border of these countries. The group variable allows the latitudes and longitudes to be attributed to a specific country.
+```{r, fig.height= 4, fig.width= 6}
+g <- ggplot() +
+  geom_polygon(data = Worldshapes_tidied, 
+               aes(x = long, y = lat, group = group),
+               fill = "lightblue", color = "black")  
+
+g
+```
+
+Here we are plotting the world map encoded by the latitude and longitude values in the `Worldshapes_tidied` dataframe. 
+
+**Read through the code and conference with a partner to determine what each part of the code is doing**
+
+
+We can now add data to the base map. Below, we are adding data from the original shapefile (including information about population, GDP, etc) to the Worldshapes dataframe we just used for graphing. 
+```{r, fig.height=6, fig.width=10}
+# Create a new column called "id". This will let us join the two datasets by shared id values
+Worldshapes1 <- mutate(Worldshapes@data, id=as.character(0:240))
+
+# Join the tidied shapefile with the data from our original shapefile. This will include data such as population, GDP, etc)
+Worldshapes2 <- left_join(Worldshapes_tidied, Worldshapes1, 
+      by = "id")
+
+# Plots map, coloring each country by the log(Gross Domestic Product)
+ggplot() +
+      geom_polygon(data = Worldshapes2, 
+        aes(x = long, y = lat, group = group, fill = sqrt(gdp_md_est)), 
+        color = "black") + 
+      scale_fill_continuous(name="log(GDP) in US $",limits = c(0,4000),
+        breaks=c(1000,2000,3000), 
+        low = "white", high = "darkblue") + 
+      xlab("longitude") + 
+      ylab("latitude")
+```
+
+Note : A warning is given with this code NaNs produced. This data uses -99 to represent missing values and so provides a warning when a few of the countries GPD values are not able to be calculated. By viewing the data and the graph, we see there is very little impact on the overall graph, so we will not go back to change the -99 values.
+
+###Adding Outside Data
+
+We can add other data to the base map. Below, we are importing the crops.csv dataset. This dataset contains data from a study that modeled crop yields under different future climate scenarios, using SRES (Special Report on Emissions) scenarios that are the precursors to the RCP pathways we discussed previously in class. 
+
+**Use the sources below to familiarize yourself with the dataset : **
+
+*Dataset overview* : http://sedac.ciesin.columbia.edu/data/set/crop-climate-effects-climate-global-food-production/docs
+
+
+*  **What crops were modeled?**
+*  **What factors went into the modeling of crop yields?**
+*  **What baseline was used to calculate crop yield changes**
+
+*Information about SRES scenarios*:
+
+*  Wikipedia gives a nice overview - https://en.wikipedia.org/wiki/Special_Report_on_Emissions_Scenarios
+
+*  A more formal overview by IPCC : http://www.ipcc.ch/ipccreports/sres/emission/index.php?idp=98
+
+*  **What are the differences between the scenarios?**
+*  **What are the CO~2~ emissions associated with each scenario?**
+
+Optional:
+
+*Dataset Citation :*
+Iglesias, A., and C. Rosensweig. 2009. Effects of Climate Change on Global Food Production from SRES Emissions and Socioeconomic Scenarios. Palisades, NY: NASA Socioeconomic Data and Applications Center (SEDAC). http://dx.doi.org/10.7927/H4JM27JZ. Accessed 16 March 2018
+
+*Published work associated with dataset :* 
+Parrya, M.L.,C. Rosenzweig, A. Iglesias, M. Livermored, and G. Fischer. 2004. Effects of Climate Change on Global Food Production Under SRES Emissions and Socio-economic Scenarios. Global Environmental Change 14 (1): 53-67. http://dx.doi.org/10.1016/j.gloenvcha.2003.10.008.
+
+```{r}
+crops = read.csv("/Users/koechlic/Desktop/Courses/ClimateChange_Sp2018/Datasets/crops2.csv") #importing dataset - you will need to do this with the dataset from Moodle
+
+head(crops) #looking at top two entries in the dataset
+```
+
+
+```{r}
+unique(crops$crop) #Different crops analyzed in the study
+unique(crops$measure) #Measures calculated from study.  "Actual" - actual crop yield in tons, "Yield Change" - crop yield change (%) from baseline, "Percent Total Grain" - percent of total grain production from an individual crop type.
+unique(crops$scenario) #Climate change scenarios 
+unique(crops$year) #Year used for modeling projections
+```
+
+**What are the benefits of a tidy dataset for this dataset?**  
+
+**Before continuing, make sure you understand the different variables contained within the dataset (you may need to revisit sources or ask). A good test is to see if you can come up with an idea for a figure or two from values in the dataset** 
+
+###Joining Datasets
+
+Now we will join the crops dataset with the shapefile information contained in the `Worldshapes2` dataframe. The `left_join()` and `filter` functions are from the dplyr library. 
+
+```{r}
+crops2 <-  plyr::rename(crops, c("ISO3v10" = "adm0_a3" )) 
+#renaming the crops column containing the alpha 3 country code (ISO3v10) in the crops dataset to the name of the alpha 3 country code column in the Worldshapes 2 dataset. This will allow us to join the two datasets. 
+
+Worldshapes3 <- left_join(Worldshapes2, crops2, by = "adm0_a3") 
+#joins the Worldshapes2 and crops.tidy.3 datasets by the alpha 3 country code. This will produce a dataset with all rows from Worldshapes2 and all columns from Worldshapes2 plus columns from crops.tidy.3 that match to the country codes in Worldshapes2.
+
+```
+
+**Take a look at the size of Worldshapes3 by looking at the number of observations listed in your global environment (the top right box in the Rstudio window)**
+
+
+One more preparatory step...
+
+If we take a look at the value variable in our dataset, we see that it is recorded as a factor. We know, however, that these are actually continuous, numerical values. If we don't change the type of variable from factor to numeric, we'll have some problems graphing down the road (ex. applying a continous color scale to a factor raises errors), so let's change it! 
+
+``` {r}
+str(Worldshapes3$value) #looking at the variable type
+
+Worldshapes3$value = as.numeric(levels(Worldshapes3$value))[Worldshapes3$value] 
+#converting from factor to numeric
+```
+
+```{r}
+tail(Worldshapes3) #Let's take a look. 
+```
+
+**Do we see the data we expect to see?**
+
+####Visualzing Final Maps
+
+Ok - let's map some of the data. Note that the dataset is quite large so filtering and plotting may be slightly delayed.
+
+```{r}
+Worldshapes.filtered <-  filter(Worldshapes3, measure == "YieldChange", year == 2020, Country == "Afghanistan")
+
+
+ p = ggplot() +
+      geom_polygon(data = Worldshapes.filtered, 
+        aes(x = long, y = lat, group = group, fill = (value)), 
+        color = "black") + 
+      scale_fill_continuous(name="Percent Yield \nChange by 2020",
+       low = "orange", high = "blue") +  
+      facet_grid(crop~scenario) +
+      xlab("longitude") + 
+      ylab("latitude")
+
+ p
+```
+
+*  **What am I plotting here?**
+
+*  **Work through the code and annotate what is going on.**
+
+*  **Play around with the low and high values in the scale for more/less effective color gradients (ex. in the first graph, replace "orange" with "light blue" - what happens to the resolution?)**
+
+*  **What trends do you notice in the figure?**
+
+Note : fig.height and fig.width commands can be used in the r setup (curly brackets) at the top of the r chunk to direct the size of figures in the R markdown rendered document. 
+
+
+You can make your own color palette to use in the mapping (and in any other graphing you do with ggplot2). 
+
+For more information about built in color palettes and palettes in RColorBrewer (a package that specializes in palettes), see http://data.library.virginia.edu/setting-up-color-palettes-in-r/. RColorBrewer should already be installed on your computers. 
+
+```{r}
+pal1 <- brewer.pal(9, "Oranges")
+#Using RColorBrewer function "brewer.pal()" to create a palette of 9 colors from the Oranges scheme. You can also manually list colors to create a palette. 
+ 
+  p = ggplot() +
+      geom_polygon(data = Worldshapes.filtered, 
+        aes(x = long, y = lat, group = group, fill = (value)), 
+        color = "black") + 
+      scale_fill_gradientn(name="Percent Yield \n Changeby 2020", colors = pal1) + 
+      facet_grid(crop~scenario) + 
+      xlab("longitude") +
+      ylab("latitude")
+ 
+ p
+```
+
+Another visualization :
+```{r fig.height= 6, fig.width= 12}
+Worldshapes.filtered.2 <-  filter(Worldshapes3, measure == "YieldChange", year == 2080, crop == "Grain")
+
+ p = ggplot() +
+      geom_polygon(data = Worldshapes.filtered.2, 
+        aes(x = long, y = lat, group = group, fill = (value)), 
+        color = "black") + 
+      scale_fill_continuous(name="Percent Yield \n Change by 2080",
+       low = "orange", high = "blue",
+        breaks=c(-7,-3,0, 3)) + #to set this range, I used information from the   command range(Worldshapes.filtered.2$value)
+      facet_wrap(~scenario) + 
+      xlab("longitude") + 
+      ylab("latitude")
+
+ p
+```
+
+*Tip : Use the zoom button to see a larger image of the figure.*
+
+*  **What am I plotting here?**
+
+*  **Work through the code and annotate what is going on.**
+
+*  **Play around with the low and high values in the scale for more/less effective color gradients** 
+
+*  **What trends do you notice in the figure?**
+
+###Widgets! 
+Just to introduce you to some other cool packages that can be synced with R, we'll introduce the concept of widgets - interactive elements often found in websites. For example, if you are using electronic handouts or websites, you may want to be able to zoom in, click on objects, or have maps update according to user inputs. This can be made possible with the use of HTML widgets. The leaflet package is a great tool for rendering dynamic maps with various interactive elements.
+
+Below is some code which allows users to click on countries to see country name and overall grain yield change in 2080 under the A1FI scenario using the leaflet package. 
+
+```{r}
+Worldshapes.Yield_20_A1FI <- Worldshapes3 %>% filter(measure == "YieldChange", 
+                                                     crop == "Grain", 
+                                                     year == 2080, 
+                                                     scenario == "A1FI") 
+
+test = Worldshapes.Yield_20_A1FI %>% group_by(Country) %>% 
+  summarize(lat = mean(lat), # summarizing to one central latitude
+            long = mean(long), # summarizing to one central longitude
+            value = min(value)) # summarizing to one value - all values should be the same within a country, so min() is just used to get to one value.
+```
+
+```{r}
+leaflet() %>%
+    addTiles() %>%  # addTiles()  Add background map
+    setView(lng = 75, lat = 37, zoom = 4) %>%  # setView() Set where the map should originally zoom to
+    addCircleMarkers(data = test,
+        lat = ~lat, lng = ~long, 
+        popup = paste(test$value, "%", test$Country)) 
+```
+
+For more information about leaflet : https://rstudio.github.io/leaflet/
+
+###On Your Own
+
+Answer the following questions together in your group, by splitting up work and then sharing results. When plotting, keep in mind that you are trying to communicate trends effectively. 
+
+*  Plot the percent change over time for total change in grain production under each of the emissions scenarios. 
+
+    +  What trends do you see?   
+    +  Which scenario is the most impactful on grain production? 
+    +  Which areas of the world are most impacted by future climate change?
+
+* Pick a country, research to find the main grain it produces, and visualize actual (not percent yield) changes in the production of that crop over time for each scenario. What trends do you see? Which scenario is the most impactful on grain production? 
+
+* Subset the data to include only a specific continent. How does grain percent yield change over time for the A1FI scenario?  
+
+*  Come up with a question of your own that you can answer by visualizing this data with a map. Then answer it!
+
+*  Come up with a plan to statistically test your question. You do not need to carry out the plan, but I would like you to discuss your plan with me.
+
+
+###Additional Mapping Strategies
+
+There is another way of working with maps, without using shapefiles. This method uses ggplot2 and the maps package (which contains several data files that allow for map creation). A tutorial for this method is found here :  http://web.grinnell.edu/individuals/kuipers/stat2labs/Handouts/RTutorials/IntroMakingMaps7_25.html
+
+

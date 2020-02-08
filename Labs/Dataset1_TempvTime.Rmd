@@ -1,0 +1,306 @@
+---
+title: "Dataset 1 - Temperature Anomalies over Time"
+output:
+  html_document
+  
+---
+
+### 1. Dataset Description and Context
+Our first dataset for the course comes from NASA (https://data.giss.nasa.gov/gistemp/)	 and contains land surface global monthly means temperature anomalies (compared to the 1951 - 1980 average) from 1880 - present. 
+
+The research paper associated with these data is : 																https://pubs.giss.nasa.gov/docs/2010/2010_Hansen_ha00510u.pdf  
+
+
+Reading in the file into Rstudio. Here, we are reading in a url, which is linked to a google sheets .csv file containing the temperature data. 
+```{r}
+my.url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRe9Enb9NeP_Ky_ZMcEyb0xNjOnqWs3GsAsEMv_LhF2wKOt9-CKcTS6dDtYEfC3u2lKMefRWLTT8Ejc/pub?output=csv"
+
+temps = read.csv(url(my.url))
+
+#Looking at the dataset
+head(temps)
+```
+
+When working with a dataset, it is important to understand the context of the dataset :  
+
+*  What was the rationale for the collection of this data? 
+*  What research question(s) can be evaluated by the data?
+*  How were the data collected? What does this mean for the evaluation of the dataset?
+
+**In this space, add information that you deem important for understanding the context of this dataset.** 
+
+
+### 2. Preparing the dataset
+
+Loading in the required libraries :
+```{r message = FALSE, warning = FALSE}
+library(ggplot2) #graphics package
+library(tidyr) #data tidying package 
+library(dplyr) #data manipulation package
+library(lubridate) 
+```
+
+Let's look at the dataset. Is it a tidy dataset?
+```{r}
+head(temps)
+```
+
+Since we have two variables - month and temperature anomaly in each of the month columns - we will need to split these up to have a "tidy" dataset. To do this, we can use the `gather` function, since we want to gather multiple columns (all the various months' columns) into two columns (a column containing the Month value and a column containing the Temperature anomaly value)
+
+```{r}
+temps2 = gather(temps, key = M, value = Temp_Anomaly, Jan.1:Dec.1) 
+#Creating tidy data - taking columns from Jan.1 to Dec.1 and then putting column names as the key (in a new column M), and the Temperature anomalies for each month into a new Temp_Anomaly column. This is a tidyr function.
+
+#Looking at the outcome
+head(temps2)
+```
+Note: We could recreate our original dataset using the `spread` command - ex. spread(temps2, key = M, value = Temp_Anomaly)
+
+Now we have a tidy dataframe. However, if we plotted the data right now, we would see that it is plotting all of the months on top of each other! 
+```{r, warning=FALSE, message=FALSE}
+#filtering the dataset to one year, to visualize lack of monthly resolution
+test = filter(temps2, Year == 2000)
+#plotting data
+ggplot(data = test, aes(x = Year, y = Temp_Anomaly)) + geom_point() 
+
+```
+
+This is because R doesn't know that these points represent different dates within the year 2000. To do this, we need to convert our dates into a date format: 
+
+```{r}
+#turning the Year and Month columns into a column that represents a specific date.
+temps3 = temps2 %>% mutate(D = paste(Year, M, sep = ".")) %>% mutate(D2 = as_date(D, "%Y.%b.%d")) 
+
+#Looking at our new columns
+head(temps3) 
+
+#Extracting the month from the new date column and putting it into its own column. This is done to ensure that the month factor is ordered correctly (from January or 01 to December or 12).
+temps4 = temps3 %>% mutate(M = month(D2)) 
+
+#looking at our output
+head(temps4)
+```
+### 3. Visualizing the dataset
+
+Now we can get to plotting! 
+
+#### Your tasks :  
+
+1.  Graph a distribution of the temperature anomalies contained in the dataset. What do you conclude from the distribution? Is there a real-world basis for your observations?
+
+```{r, fig.width= 6, fig.height=5}
+ggplot(temps4, aes(Temp_Anomaly)) + geom_histogram()
+```
+
+
+2.  Graph overall trend in temperature anomaly vs. time using the ggplot function. Think about what type of graph would be most appropriate (identify types of variables, etc). Are there other aesthetics to add to the graph to underline a specific trend?
+```{r fig.width= 6, fig.height=5}
+ggplot(temps4, aes(x = D2, y = Temp_Anomaly)) + geom_point()
+
+#With trendline
+ggplot(temps4, aes(x = D2, y = Temp_Anomaly)) + geom_point() + geom_smooth(method = "lm")  + labs(x = "Year", y = expression("Global Average Monthly \n Temperature Anomaly " ( degree~C)))
+
+```
+
+
+3.  Graph temperature anomaly vs. time, highlighting monthly trends over time (can do this in many ways - try a couple and see which is most effective)
+
+```{r fig.width= 6, fig.height=5}
+#color continuous 
+ggplot(temps4, aes(x = D2, y = Temp_Anomaly)) + geom_point(aes(color = M)) + labs(x = "Year", y = expression("Global Average Monthly \n Temperature Anomaly " ( degree~C)), color = "Month")
+
+#color discrete
+ggplot(temps4, aes(x = D2, y = Temp_Anomaly)) + geom_point(aes(color = as.factor(M))) + labs(x = "Year", y = expression("Global Average Monthly \n Temperature Anomaly " ( degree~C)), color = "Month")
+
+#Facetting
+ggplot(temps4, aes(x = D2, y = Temp_Anomaly)) + geom_point() + facet_wrap(~M) + labs(x = "Year", y = expression("Global Average Monthly \n Temperature Anomaly " ( degree~C)))
+
+```
+
+
+4.  Using functions in the dplyr package, calculate the yearly mean temperature anomaly and standard deviation for each year. Then, plot the yearly mean temperature over time. Can you add in the standard error values? How does this plot differ from your plot in question 2? Which is most effective and why? 
+
+```{r}
+#grouping data by year, then applying mean function to summarize. 
+temps_year = temps4 %>% 
+  group_by(Year) %>% 
+  summarise(mean_yearly_anom = mean(Temp_Anomaly), 
+            sd_yearly_anom = sd(Temp_Anomaly))
+
+#checking output
+head(temps_year)
+
+ggplot(temps_year, aes(x = Year, y = mean_yearly_anom)) + 
+  geom_point() + 
+  geom_errorbar(aes(ymin = mean_yearly_anom - sd_yearly_anom,
+                    ymax = mean_yearly_anom + sd_yearly_anom)) +
+  labs(x = "Year", 
+       y = expression("Global Average Annual \n Temperature Anomaly " ( degree~C)))
+```
+
+5.  Using the trends that you see in your figures, identify a scientific (not statistical) hypothesis that you will test in class on Wednesday. 
+
+You can manipulate this markdown document to complete tasks 1-5. Make sure to :
+
+*  Annotate your code
+*  Clearly demarcate different sections of your report
+*  Answer all questions above + provide any additional rationale necessary
+*  Be open to working with others - just make sure to submit your own code, commenting, and answers 
+*  Submit your R markdown document + knit html file on Moodle before Wednesday's class. Please do this even if you have not completed all the above tasks. If you got stuck on a task and could not finish it, make sure to describe what you did to troubleshoot and what you got stuck on. It's okay to get stuck!!
+
+
+
+### 4. Statistical Testing
+
+We have visualized the relationship between temperature and time - now we want to statistically test the trends we see.  
+
+Let's say we want to test whether or not there is a relationship between temperature and time and have the hypothesis that temperature has been increasing over time. Once we have a research question and hypothesis, we can develop statistical null and alternative hypotheses. For instance :
+
+*  H0 : No trend exists between temperature and time - the slope of the regression line will be zero.
+*  HA : A trend exists between temperature and time - the slope of the regression line will not be equal to zero.
+
+We can evaluate our null hypothesis through the use of linear regression (parametric).
+**For our purposes : Parametric tests make the assumption of a normal distribution and homoscedacity + non-parametric tests do not make those assumptions.** 
+
+Both of these tests have assumptions that we need to test before applying the tests. Assumptions are criteria that the data need to meet to ensure that the test allows appropriate analysis of the data.
+
+#####  Linear Regression assumptions : 
+*  Linearity - data should appear to follow a linear trend
+*  Observations (y values) and residuals are normally distributed
+*  Observations and residuals are homoscedastic (have similar variances across observations)
+*  Independence - one data point does not depend on other data points. Temporal and spatial autocorrelation are often sources of non-independence.   
+
+These are nicely explained here : <http://www.biostathandbook.com/linearregression.html>
+
+**Note : simulations show that regression (and correlation) are pretty robust to non-normality and heteroscedacity (unevenly distributed variation). This means that even if the data are not normal, the p-value is still valid (ie: will only be 0.05 about 5% of the time if the null hypothesis is true - type I error holds up). 
+
+*Before we rigorously test assumptions, what evidence do we already have about the normality or non-normality of our dataset? Do we have information about any of the other assumptions?* 
+
+#### 4a. Testing Assumptions
+
+Using information from <http://www.simonqueenborough.info/R/statistics/testing-assumptions>, we will test assumptions for the parametric linear regression test.
+
+First we will fit a linear regression to our data, using the lm() command
+```{r}
+temp_model = lm(temps4$Temp_Anomaly ~ temps4$Year)
+# read as lm(y~x)
+# we are using D2, since it provides us with the time points in correct order. 
+```
+
+If we look at the struction of the model - `str(temp_model)` -, we see that it contains a variety of components, including residuals and the fitted model values (ex. the predicted values of the line of best fit). We can extract these components of the model to test assumptions. 
+
+**1. An assumption of a linear relationship** 
+
+To do this, we will make a plot of observed (from original dataset) vs. predicted (by model) values
+```{r fig.width=5, fig.height=5}
+# Here, the observed (dat$Head) on predicted (or fitted: m$fitted.values). The abline command adds a 1:1 line
+
+plot(temps4$Temp_Anomaly ~ temp_model$fitted.values) + abline(0,1)
+
+```
+What can we conclude about the assumption?
+
+We can also plot the residual values vs. predicted values. If we have a linear relationship, residual values should be ~symmetrically distributed around a horizontal line, with relatively similar variance across predicted values. 
+```{r fig.width=5, fig.height=5}
+# Here, the residuals (m$residuals) on predicted (or fitted: m$fitted.values). The abline command here adds a horizontal line at y = 0. 
+plot(temp_model$residuals ~ temp_model$fitted.values) + abline(h = 0)
+```
+With this graph, what additional information do we have about the assumption?
+
+We can also plot residuals vs. the independent variable in our dataset (time). Again, residuals should be evenly distributed with similar variance across the independent variable. 
+```{r fig.width=5, fig.height=5}
+plot(temp_model$residuals ~ temps4$Year)
+```
+
+
+**2. Homoscedacity (similar variation of values measured)**
+
+These last two graphs also let us evaluate homoscedacity. Data that show homoscedacity will have residuals that are evenly distributed across the data. Does our data show this?
+
+We can statistically test for homoscedascity using Bartlett's test. The null hypothesis of Bartlett's test is that the variances across samples is the same. 
+
+```{r}
+bartlett.test(Temp_Anomaly ~ Year, data=temps4)
+
+```
+
+What can we conclude?
+
+**3. Normality of data + residuals**
+
+We can look at the distribution of the data via histogram : 
+```{r fig.width=5, fig.height=3}
+hist(temps4$Temp_Anomaly)
+```
+
+We can plot our Temperature anomaly values vs the normal distribution. If all sample values match 1:1 with the normal distribution, we can assume normality: 
+```{r fig.width=5, fig.height=3}
+qqnorm(temps4$Temp_Anomaly) 
+```
+
+Finally, we can statistically test the assumption of normality using the Shapiro-Wilk test, which has the null hypothesis that the population is normally distributed. 
+```{r}
+shapiro.test(temps4$Temp_Anomaly)
+```
+
+
+**4. An assumption of independence of y values and residuals associated with y values** 
+
+The acf() function computes estimates of autocorrelation. The X axis corresponds to the lags of the residual, increasing in steps of 1. The very first line (to the left) shows the correlation of the residual with itself (Lag0), therefore, it will always be equal to 1.
+
+If the residuals were not autocorrelated, the correlation (Y-axis) from the immediate next line onwards will drop to a near zero value below the dashed blue line (significance level). If values are above the blue line, autocorrelations are statistically significantly different from zero. 
+
+```{r, fig.width=5, fig.height=3}
+acf(temp_model$residuals)
+```
+
+#### Statistical Testing 
+
+Although our data does violate some of the assumptions of linear regression, we will continue to evaluate our statistical hypothesis using our data. This decision is supported by the relative robustness of linear regression to non-normality and heteroscedascity, as well as use of linear regression in analyses by the International Panel on Climate Change (IPCC) (<https://www.ipcc.ch/pdf/assessment-report/ar5/wg1/WG1AR5_Chapter02_FINAL.pdf>, see pg.22), recommendation by the National Center for Atmospheric Research (NCAR) (<https://climatedataguide.ucar.edu/climate-data-tools-and-analysis/trend-analysis>), and use in other scientific publications looking at temperature over time (<https://journals.ametsoc.org/doi/full/10.1175/JCLI-D-15-0032.1>)
+
+To see the output of our linear regression, we use : 
+```{r}
+summary(temp_model)
+```
+
+We can check out the fit our of linear regression - using the method "lm" in the code below will apply the lm model to our specified x and y in the main aes() expression : 
+```{r}
+ggplot(temps4, aes(x = D2, y = Temp_Anomaly)) + 
+  geom_point() + geom_smooth(method = "lm")  + 
+  labs(x = "Year", y = expression("Global Average Monthly \n Temperature Anomaly " ( degree~C)))
+```
+
+We could assess our data non-parametrically via the Kendall-Thiel test - a nonparametric version of linear regression. 
+
+```{r}
+library(mblm)
+model.temp = mblm(Temp_Anomaly ~ Year, 
+               data=temps4)
+
+summary(model.temp)
+```
+**How does this nonparametric test compare to our parametric result?**
+
+We can also look at non-linear trends in our data. The `loess` fit is a locally weighted least squares regression, meaning that it weighs local data in determining the predicted y values. 
+```{r}
+ggplot(temps4, aes(x = D2, y = Temp_Anomaly)) + geom_point() + geom_smooth(method = "loess")
+```
+The loess suggests that a polynomial fit may be better. We can fit a polynomial via : 
+```{r}
+#poly fits a polynomial to the data, with the degree specified after the comma (3).
+temp_model_poly = lm(temps4$Temp_Anomaly ~ poly(temps4$Year, 3))
+
+#looking at the summary of the model
+summary(temp_model_poly)
+
+#Are our residuals more normal? 
+plot(temp_model_poly$fitted.values,temp_model_poly$residuals)
+
+#Graphing our polynomial fit
+ggplot(temps4, aes(x = Year, y = Temp_Anomaly)) + geom_point() + stat_smooth(formula = y ~ poly(x, 3), se=TRUE, method="lm")
+```
+
+
+### On your own 
+What if we wanted to evaluate if warming was occuring more rapidly over time? Come up with a way to test this question and carry out the analysis. Once done, evaluate the question, using evidence you have collected.  
+

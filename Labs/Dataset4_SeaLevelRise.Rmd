@@ -1,0 +1,98 @@
+---
+title: "Dataset 4 - Sea Level Change"
+output:
+  html_document:
+    theme: sandstone
+    highlight: pygments
+---
+### Introduction
+
+We will not turn in this dataset exploration, but instead use it to :  
+
+*  Further comprehend sea level rise in specific locations around the world  
+*  Refine our data analysis techniques 
+
+You will need to work on this dataset outside of class.
+
+Our data for exploration of sea level change will come from <https://tidesandcurrents.noaa.gov/sltrends/sltrends.html>. Navigate to this webpage and explore the map. 
+
+*  What observations do you make?
+*  What questions do you have?
+
+### Describing context of the dataset
+
+*  What is being measured on the map?  
+*  What units are used? What do these units imply about the collection of data?
+*  What other information is provided about how the data was collected (check the bottom of the webpage)
+
+*  Click on an arrow on the map. What other measurements can you explore for a location?   
+    +  Look at these plots - what conclusions or observations can you draw? Note that you can download the data used in the plots.  
+
+
+*  In the left-hand menu, click on Data Tables, and select "Global Trend Table". This brings you to a page that shows the mean sea level (MSL) trends plus 95% confidence interval for these trends for various locations around Earth. You can download this table as a .csv file by clicking on the "Export to csv" button at the top of the page.
+
+
+### Research question and Scientific hypothesis 
+
+*  Given the data you have access to (in tables and for individual arrows), come up with a question you'd like to answer and an accompanying hypothesis based on previous knowledge. 
+
+* Example question : Is sea level rise rate greater on the east or west coast of the U.S.? (feel free to use this question)
+
+*  **Think about how you would answer question - can you do it with the information you have?** 
+
+
+### Obtaining data and beginning analysis. 
+
+Once you have set your question and hypothesis, download the necessary data for analysis and load it into R. 
+
+*  What libraries will you need to complete the analysis? Load them in an R chunk at the beginning of your analysis.
+
+*  Once loaded in, take a look at the dataset 
+
+*  Then, trim or manipulate the dataset as needed. 
+
+For my example question above, one approach would be to compare an equal number of locations on the east and west coast. My approach:  
+
+*  Download the US trends table and read into R  
+*  Add a column representing the state that the location is in using tidyr `separate()` function  
+*  Use the state information to add a column representing east or west coast using dplyr `mutate()` function combined with an `if_else()` function. This presentation explains the process well : <https://rstudio-pubs-static.s3.amazonaws.com/116317_e6922e81e72e4e3f83995485ce686c14.html#/1>  
+*  Then randomly select 20 locations from the east or the west coast using dplyr `sample_n()` function combined with the `group_by()` function.  
+
+### Visualizing data + Description of trends  
+
+*  Create a graph that helps to visualize the answer/trend intrinsic to the question you are asking  
+*  Add a legend underneath the figure that: 
+    +  explains the figure (what is on the x-axis, what is on the y-axis, what does color/size/etc represent, what does the graph show in general)  
+    +  summarizes the general trend seen in the figure, as pertinent to your research question.
+
+For my example question, I would like to compare continous values across two conditions. A great way to do this would be to create a boxplot or a violin plot. 
+
+### Statistical hypothesis + Statistical testing
+
+*  Focus on the research question and hypothesis you developed.
+*  Use your statistics flow sheet to identify the test!
+*  Make sure you think about and explain your rationale for using a certain test
+*  Look up information about the null hypothesis and test assumptions - a great resource is : http://www.biostathandbook.com/  
+*  To figure out how to run the test in R, a good source is <https://rcompanion.org/rcompanion/a_02.html>. A Google search can also be fruitful.
+
+For the example question, my statistical approach would be to compare the means of sea level rise for two 'treatments', using a t-test. 
+
+### Evaluation of hypotheses
+
+*  Write a few summary sentences evaluating both your statistic and biological hypotheses, backed up by evidence from your figure and from your statical testing.  
+
+### Connection to Climate Change 
+
+* What might be some mechanisms behind your results?    
+    +  Why, in general, is sea level rising globally?  
+    +  What local conditions may impact sea level rise?
+    
+*  What are some implications of your findings?  
+    +  Can you do some research about current impacts to the regions you researched?
+    +  Do these regions have plans for mitigation or adaptation?
+
+### Troubleshooting self assessment
+
+*  Reflect on one issue you had and how you surmounted it. 
+
+

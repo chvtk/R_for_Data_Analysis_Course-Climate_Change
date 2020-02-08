@@ -1,0 +1,93 @@
+---
+title: "Dataset 5 - Ocean Temperature and Acidification"
+output:
+  html_document:
+    theme: sandstone
+    highlight: pygments
+---
+
+### Introduction
+
+Changes in ocean temperature and chemistry can have large implications for biological communities in the ocean. Our goal with this data analysis is to visualize recent trends in ocean temperature and pH, link those trends to specific mechanisms, and explore biological impacts linked to those trends.
+
+### Preliminary analysis - establishing trends
+
+**1. Ocean Temperature**
+
+Read in the following data to an R markdown document and produce a graph that shows the relationship between global ocean temperature and time. The data also includes 95% confidence intervals. Once plotted, answer the questions below.  
+
+Data url : https://docs.google.com/spreadsheets/d/e/2PACX-1vTmLsgzEepGhM7wy-Z_UsfKWeb2cIUw_KobXRo9pBNX0oB0hvYiKkHX1Pry6FV5SDGdJ5EEoxR3SeEW/pub?gid=0&single=true&output=csv  
+
+Data source: NOAA, 2016 
+
+Accessed at: https://www.epa.gov/climate-indicators/climate-change-indicators-sea-surface-temperature  
+
+*  What major trend(s) is seen in the data?
+*  Which is rising faster - atmospheric temperature or ocean temperature? Why?
+*  What is the mechanism behind this rise?
+
+**2. Ocean pH and CO~2~**
+
+Read in the following data to an R markdown document and produce a graph that shows the relationship between time and dissolved CO~2~ (measured as partial pressure of CO~2~ in micro-atmospheres - equivalent to ppm) in all three locations measured. Create another plot showing the relationship between time and pH. Note that you may need to tide the dataset before plotting. Once plotted, answer the questions below. 
+
+Data url : https://docs.google.com/spreadsheets/d/e/2PACX-1vRAQEbY2soGSxHXAPPEqeYsiN6SqqQXwSEdCLCbZZ08mLZSZMC0ZhjQ0LYP6CgpwC31PgAu63v1p7kR/pub?gid=0&single=true&output=csv  
+
+Data source : Bates, 2016; González-Dávila, 2012; Dore, 2015.  
+
+Accessed at www.epa.gov/climate-indicators
+
+*  What major trends are seen in the data?
+*  Picking one location, by what factor has H^+^ concentration increased over the time period measured? Remember that pH is measured on a log~10~ scale.  
+*  What is the mechanistic realtionship between pH and CO~2~? How does this relate to the trends you see in your graphs?
+
+**3. Calcium Carbonate solubility**  
+
+Read in the following data to an R markdown document and produce a graph that shows the relationship between dissolved CO~2~ (measured as partial pressure of CO~2~ in micro-atmospheres - equivalent to ppm) and calcification rate (measured as mmol CaCO~3~ m^-2^ d^-1^) Once plotted, answer the questions below.  
+
+Data url : https://docs.google.com/spreadsheets/d/e/2PACX-1vS46wN6W8mPFnVSY8kT9lfTZZbnaSD_WKA1mk2dZLOgcf6nWTiMpqQfsemX4tRF274CwnzSmfX9i0Gs/pub?gid=0&single=true&output=csv
+
+Data source : Langdon, C et al. (2000): Effect of calcium carbonate saturation state on the calcification rate of an experimental coral reef. Global Biogeochemical Cycles, 14(4), 639-354, https://doi.org/10.1029/1999GB001195
+
+*  What major trend(s) is seen in the data?
+*  What do your trends mean?
+*  How do your trends relate to ocean pH changes? 
+
+
+### Main Analysis - linking trends to biological responses
+
+For our main analysis, we will focus on a dataset collected as part of a study exploring impacts of increasing oceanic CO~2~ on a variety of species of corals from Moorea, French Polynesia. 
+
+Information about the dataset and experimental set-up can be found here :
+https://darchive.mblwhoilibrary.org/bitstream/handle/1912/7929/Dataset_description.pdf?sequence=11&isAllowed=y
+
+More information about the experimental set-up can be found in the paper resulting from this research - "Differences in the responses of three scleractinians and the
+hydrocoral *Millepora platyphylla* to ocean acidification" - which is on Moodle
+
+Please read the background information and then complete the following:
+
+*  Sketch/diagram out a representation of the experimental set up. Think about CO2 and temperature treatments, replicates, and species used. 
+*  Why were the specific treatments chosen? Of what are they representative?
+*  Why were these species chosen?
+*  What may be some caveats (limitations) of the data collection or experimental set-up used in the experiment? 
+*  What questions could you ask with this data?
+*  What further questions do you have about the methods used to collect this data?
+
+Data url : https://docs.google.com/spreadsheets/d/e/2PACX-1vRVnrvMwut0rM96td5CiIvkztZP0uNhh_mei4wQVx7V9COgYUm5Q5Xzt7cS2I_TtiOOqqQ_xtzVVsgJ/pub?gid=0&single=true&output=csv
+
+The dataset contains the following variables:
+
+Column                |  Units / Description
+--------------------- | -----------------------------------------------------
+location              | Location of sampling of coral species
+latitude              | degrees, minutes, seconds
+longitude             | degrees, minutes, seconds  
+species               | Coral species - AP : *Acropora pulchra*, Pm : *Pocillopora meandrina*, Mipl : *Millepora platyphylla*, MP : massive Porites spp. (15% *P. lobata* and 85% *P. lutea*)
+pCO2                  | CO~2~ treatment (ambient vs high)
+temp                  | Temperature treatment (ambient vs high)
+tank                  | Tank number (replicates)
+treatment             | Combined CO~2~ and Temperature treatment
+calcification         | calcification rates (CaCO~3~ cm^-2^ day^-1^)
+biomass               | coral biomass mg cm^-2^
+
+Based on your understanding of the experiment, come up with a research question that you can answer with the data provided. Feel free to use any additional data that we've worked with in class to supplement your analysis. Additionally, you can use the published paper associated with the dataset for research question ideas, confirmation of results, or (in the discussion) information relevent to the biological implications of your results.
+

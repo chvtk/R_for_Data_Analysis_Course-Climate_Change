@@ -1,0 +1,95 @@
+---
+title: "Dataset 3 - Vostok Record"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+In this analysis, we will be looking at data from part of the Vostok ice core, one of the longest ice cores recovered. 
+
+**URL for Dataset** : "https://docs.google.com/spreadsheets/d/e/2PACX-1vRW8gMRt1iNz-3pSJwsO1roMI4_xv7zZXzoRv5scM5zXXtXbDrYZ87nI_1pmrYdWH8aOugjmHyvDCII/pub?gid=0&single=true&output=csv"
+
+Snow falling in the polar regions of the earth (e.g. Greenland and Antarctica) is preserved as annual layers within the ice sheets, provided that they are not destroyed by flow of the ice. These annual layers provide a record of the earth's climate that reaches back as much as 800,000 years.  
+
+Several different climate indicators can be measured from samples of the ice:  
+
+*  The amount of dust in each annual layer is indicative of the environment at the time that the dust was deposited. Various kinds of fallout from the atmosphere, including airborne continental dust and biological material, volcanic debris, sea salts, cosmic particles, and isotopes produced by cosmic radiation, are deposited on the ice sheet surface along with the snow, thus mixing with the snow and also acting as a distinctive barrier between different ice layers.  
+
+*  The composition of bubbles of air trapped in the ice is a measure of the composition of the atmosphere in ancient times. With increasing pressure from subsequent snow deposition on an ice cap or glacier, the snow becomes compacted and, consequently, air is trapped within the deposited layer. This entrapment of air occurs essentially with no differentiation of the atmospheric gas components. However, carbon dioxide has different chemical properties from other atmospheric gases, thus, the carbon dioxide concentration in the air-filled spaces might be affected by interaction with the ice itself or with trapped impurities.  
+
+*  The isotopic composition of water, and in particular the concentration of the heavy isotope of oxygen, ^18^O, relative to ^16^O, as well as ^2^H (deuterium) relative to ^1^H, is indicative of the temperatures of the environment. During cold periods, the concentration of less volatile ^2^H (^18^O) in the ice is lower than during warm periods. The reason for this is that at lower temperature, the moisture has been removed from the atmosphere to a larger degree resulting in an increased depletion of the heavier isotopes.  
+
+The Vostok core was drilled in East Antarctica, at the Soviet station Vostok from an altitude of 3488 m, and has a total length of 2083 m. Ice samples have been analyzed with respect to isotopic content in ^2^H, dust, and methane and carbon dioxide trapped in air bubbles. The profiles of ^2^H, methane, and carbon dioxide concentrations behave in a similar way with respect to depth in the core, showing a short interglacial stage, the Holocene, at the top, a long glacial stage below, and the last interglacial stage near the bottom of the core. The record goes back in time about 400,000 years, of which we will be analyzing the most recent 160,000 years.  
+
+Age is calculated in two different ways within an ice core. The ice age is calculated from an analysis of annual layers (counting layers) in the top part of the core, and using an ice flow model (based on snow accumulation rates and topography),  for the bottom part. The gas age data accounts for the fact that gas is only trapped in the ice at a depth well below the surface where the pores close up.  
+
+Column                |  Units
+--------------------- | -----------------------------------------------------
+depth                 | meters (m)  
+ice_age               | kilo year (kyr, 1000 years)  
+delta.D               | per mil (‰)  
+dust                  | parts per million (ppm, equivalent to mg/L) 
+gas_age               | kilo year (kyr, 1000 years)  
+CO2                   | parts per million (ppm, equivalent to mg/L)    
+CH4                   | parts per billion (ppb, equivalent to ug/L)  
+
+####**A. Ice age vs. Gas age**  
+
+**Task 1**: Using the Vostok ice core data, plot both the ice age and the gas age as a function of depth on the same graph. Describe the graph and answer the following questions:  
+
+*  What are the units of both age scales?
+*  What are the depths of the shallowest and deepest data points? 
+*  Does age increase or decrease down the core? Why?  (For the rest of the lab, assume that the most shallow ice core measurements represent the environmental conditions in the 18^th^ century before the Industrial Revolution)
+*  Why do the two age curves differ?
+*  How much younger is a bubble of gas than the ice that surrounds it, at a depth of 250 meters?
+
+
+####**B. δD as a proxy for temperature** 
+
+**Task 2**: Next you will calculate the temperature based on the isotopic composition of the ice. Isotopic ratios can be used to model temperature. Calculate the temperature at Vostok based on the following formula describing the empirical relationship between temperature and deuterium concentration. Does this equation make sense given your understanding of the deuterium ratio? :  
+
+Temperature (deg-C) = -55.5 + (δD + 440) / 6  
+
+Now plot your calculated temperature vs. ice age (remember...the ice core was taken in Antarctica!). How long ago did the maximum temperature occur? How long ago did the minimum temperature occur? Do you see evidence of any significant climate changes (if so, when)?  How do these temperature compare to the current temperature at current average Vostok temperature?  
+
+
+####**C. CO~2~, CH~4~, and Dust**  
+
+**Task 3**: Plot CO~2~ as a function of gas age. How closely does the plot of CO~2~ resemble that of temperature? Now plot CO~2~ against temperature. Run a linear regression (test your assumptions!) and note the pertinent results.  
+
+**Task 4**: Do the same analysis for CH~4~.  
+
+*  Which test shows the larger effect size?  
+  +  What does effect size mean in this analysis? 
+*  Is CO~2~ or CH~4~ more closely correlated with temperature? Why might this be? 
+
+Now make a plot of dust as a function of ice age. Compare this to the temperature plot; how well do the changes in dust concentration correlate with the temperature changes? There's more information about this relationship in the Petit et al. paper.   
+
+**Task 5**: The present atmospheric CO~2~ and CH~2~ concentrations are 407 ppm and 1,834 ppb, respectively. Calculate the changes in CO~2~ and CH~4~ concentrations between the last glacial maximum (24,500 years ago or 24.5 ka) and the 18th century, and between the 18th century and today. 
+
+**Task 6**: Insert today's CO~2~ concentration (use the value given above) into the linear regression equation from task 3 to determine what the past relationship between CO~2~ and temperature predicts present average temperature should be at Vostok. How does your calculation compare with the known value?   
+
+
+####**D. Rates of Change**  
+
+You can calculate the rate of change of temperature (degrees/ka) by subtracting one temperature from the next oldest and dividing by the ice-age difference. That is:  
+
+(younger temp - older temp)/(older ice age - younger ice age) = rate of change (positive for warming, negative for cooling)  
+
+Recall that younger means shallower here. 
+
+You may need to research how to do this in R! I also advocate checking your output to make sure you are calcuating what you think you are calculating. 
+
+**Task 7**: Calculate the warming rate for the entire time series and plot warming rate vs. ice age. What is the most rapid warming that occurred during the deglaciation that began around 15,000-20,000 years ago? How do the rates of warming that you've calculated compare with the current temperature data (can use dataset 1 to find current rates of change)?  
+
+**Task 8**: Now calculate the rate of change in greenhouse gas concentrations (CO~2~ and CH~4~) versus gas age for this time period. How do these rates of change compare with the change in carbon dioxide and methane concentrations that has occurred over the past 100 years? To explore current CO~2~ and CH~4~ rate change, use the following data collected from the Mauna Loa Observatory :
+https://docs.google.com/spreadsheets/d/e/2PACX-1vSFDA_q893zwOn0n4vireXfMBTywzyHZ1Sl6fqc2hhVbJzeeYSWRwPRPbXOwvqjzqO0Y5kRmeboT7Lv/pub?gid=0&single=true&output=csv
+
+**Task 9**: Note that there were two major warming events representing two deglaciations in the Vostok calculated temperature data. Then look at how CO~2~ and CH~4~ change during those deglaciation periods. From the data provided, can you tell which changes first, temperature or greenhouse gas (CO~2~, CH~4~) concentrations? Can you add a component to you graph that can help you answer this question? 
+
+###Pulling it Together
+Once you have worked through the above tasks, synthesize your analysis into a report, following the 10 class standards. Note that you do not need to include all the analyses above - include as much as is needed for creating a clear, readable, and evidence-based report.  
+
+
+
+
